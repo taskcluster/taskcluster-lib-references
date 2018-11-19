@@ -42,7 +42,7 @@ suite('serializable_test.js', function() {
       content: {
         $schema: '/schemas/common/exchanges-reference-v0.json#',
         serviceName: 'test2',
-        version: 0,
+        apiVersion: 'v2',
         title: 'test',
         description: 'test',
         exchangePrefix: 'x',
@@ -69,7 +69,7 @@ suite('serializable_test.js', function() {
       $schema: '/schemas/common/manifest-v3.json#',
       references: [
         '/references/test/v1/api.json',
-        '/references/test2/v1/exchanges.json',
+        '/references/test2/v2/exchanges.json',
       ],
     });
   });
@@ -80,7 +80,7 @@ suite('serializable_test.js', function() {
       $schema: rootUrl + '/schemas/common/manifest-v3.json#',
       references: [
         rootUrl + '/references/test/v1/api.json',
-        rootUrl + '/references/test2/v1/exchanges.json',
+        rootUrl + '/references/test2/v2/exchanges.json',
       ],
     });
   });
@@ -91,7 +91,7 @@ suite('serializable_test.js', function() {
       $schema: 'https://schemas.taskcluster.net/common/manifest-v3.json#',
       references: [
         'https://references.taskcluster.net/test/v1/api.json',
-        'https://references.taskcluster.net/test2/v1/exchanges.json',
+        'https://references.taskcluster.net/test2/v2/exchanges.json',
       ],
     });
   });
@@ -136,10 +136,10 @@ suite('serializable_test.js', function() {
 
   test('generates an exchanges reference filename', function() {
     const serializable = makeSerializable({references});
-    assert_file(serializable, 'references/test2/v1/exchanges.json', {
+    assert_file(serializable, 'references/test2/v2/exchanges.json', {
       $schema: '/schemas/common/exchanges-reference-v0.json#',
       serviceName: 'test2',
-      version: 0,
+      apiVersion: 'v2',
       title: 'test',
       description: 'test',
       exchangePrefix: 'x',
