@@ -23,7 +23,7 @@ class RefBuilder {
     return this;
   }
 
-  apiref({omitPaths=[], filename='test-api-ref.yml', ...content}) {
+  apiref({omitPaths=[], filename='test-api-ref.yml', entries=[], ...content}) {
     this.references.push({
       filename,
       content: omit(merge({
@@ -32,7 +32,40 @@ class RefBuilder {
         serviceName: 'test',
         title: 'Test Service',
         description: 'Test Service',
-        entries: [],
+        entries: entries.map(({omitPaths=[], ...content}) => omit(merge({
+          type: 'function',
+          name: 'foo',
+          title: 'Foo',
+          description: 'Foo-bar',
+          method: 'get',
+          route: '/foo',
+          args: [],
+          stability: 'experimental',
+        }, content), omitPaths)),
+      }, content), omitPaths),
+    });
+    return this;
+  }
+
+  exchangesref({omitPaths=[], filename='test-exch-ref.yml', entries=[], ...content}) {
+    this.references.push({
+      filename,
+      content: omit(merge({
+        $schema: '/schemas/common/exchanges-reference-v0.json#',
+        apiVersion: 'v2',
+        serviceName: 'test',
+        title: 'Test Service',
+        description: 'Test Service',
+        exchangePrefix: 'test/v2',
+        entries: entries.map(({omitPaths=[], ...content}) => omit(merge({
+          type: 'topic-exchange',
+          exchange: 'test',
+          name: 'foo',
+          title: 'Foo',
+          description: 'Foo-bar',
+          routingKey: [],
+          schema: 'v2/message.json#',
+        }, content), omitPaths)),
       }, content), omitPaths),
     });
     return this;
@@ -161,19 +194,36 @@ suite('validate_test.js', function() {
     ]);
   });
 
-  test('reference with no $schema fails', function() {
+  test('api reference with no $schema fails', function() {
     const references = new RefBuilder()
       .apiref({omitPaths: ['$schema']})
       .end();
     assertProblems(references, ['reference test-api-ref.yml has no $schema']);
   });
 
-  test('invalid reference fails', function() {
+  test('exchanges reference with no $schema fails', function() {
     const references = new RefBuilder()
-      .apiref({entries: true})
+      .exchangesref({omitPaths: ['$schema']})
+      .end();
+    assertProblems(references, ['reference test-exch-ref.yml has no $schema']);
+  });
+
+  test('invalid api reference fails', function() {
+    const references = new RefBuilder()
+      .apiref({serviceName: true})
       .end();
     assertProblems(references, [
-      'test-api-ref.yml: reference.entries should be array',
+      'test-api-ref.yml: reference.serviceName should be string',
+    ]);
+  });
+
+  test('invalid exchanges reference fails', function() {
+    const references = new RefBuilder()
+      .schema({$id: '/schemas/test/v2/message.json#'})
+      .exchangesref({title: false})
+      .end();
+    assertProblems(references, [
+      'test-exch-ref.yml: reference.title should be string',
     ]);
   });
 
