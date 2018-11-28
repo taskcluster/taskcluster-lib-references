@@ -246,5 +246,99 @@ suite('validate_test.js', function() {
       'which does not have the metadata metaschema',
     ]);
   });
+
+  test('exchanges reference with absolute entry schema URL fails', function() {
+    const references = new RefBuilder()
+      .exchangesref({entries: [{schema: 'https://schemas.exmaple.com/message.json#'}]})
+      .end();
+    assertProblems(references, [
+      'test-exch-ref.yml: entries[0].schema is not relative to the service',
+    ]);
+  });
+
+  test('exchanges reference with /-relative entry schema (that exists) fails', function() {
+    const references = new RefBuilder()
+      .schema({$id: '/schemas/test/v2/message.json#'})
+      .exchangesref({entries: [{schema: '/schemas/test/v2/message.json#'}]})
+      .end();
+    assertProblems(references, [
+      'test-exch-ref.yml: entries[0].schema is not relative to the service',
+    ]);
+  });
+
+  test('exchanges reference with ../-relative entry schema (that exists) fails', function() {
+    const references = new RefBuilder()
+      .schema({$id: '/schemas/test/v2/message.json#'})
+      .exchangesref({entries: [{schema: '../test/v2/message.json#'}]})
+      .end();
+    assertProblems(references, [
+      'test-exch-ref.yml: entries[0].schema is not relative to the service',
+    ]);
+  });
+
+  test('exchanges reference with entry schema that does not exist fails', function() {
+    const references = new RefBuilder()
+      .exchangesref({entries: [{schema: 'v2/message.json#'}]})
+      .end();
+    assertProblems(references, [
+      'test-exch-ref.yml: entries[0].schema does not exist',
+    ]);
+  });
+
+  test('api reference with absolute entry input URL fails', function() {
+    const references = new RefBuilder()
+      .apiref({entries: [{input: 'https://schemas.exmaple.com/resource.json#'}]})
+      .end();
+    assertProblems(references, [
+      'test-api-ref.yml: entries[0].input is not relative to the service',
+    ]);
+  });
+
+  test('api reference with /-relative entry input (that exists) fails', function() {
+    const references = new RefBuilder()
+      .schema({$id: '/schemas/test/v2/resource.json#'})
+      .apiref({entries: [{input: '/schemas/test/v2/resource.json#'}]})
+      .end();
+    assertProblems(references, [
+      'test-api-ref.yml: entries[0].input is not relative to the service',
+    ]);
+  });
+
+  test('api reference with entry input that does not exist fails', function() {
+    const references = new RefBuilder()
+      .apiref({entries: [{input: 'v2/resource.json#'}]})
+      .end();
+    assertProblems(references, [
+      'test-api-ref.yml: entries[0].input does not exist',
+    ]);
+  });
+
+  test('api reference with absolute entry output URL fails', function() {
+    const references = new RefBuilder()
+      .apiref({entries: [{output: 'https://schemas.exmaple.com/resource.json#'}]})
+      .end();
+    assertProblems(references, [
+      'test-api-ref.yml: entries[0].output is not relative to the service',
+    ]);
+  });
+
+  test('api reference with /-relative entry output (that exists) fails', function() {
+    const references = new RefBuilder()
+      .schema({$id: '/schemas/test/v2/resource.json#'})
+      .apiref({entries: [{output: '/schemas/test/v2/resource.json#'}]})
+      .end();
+    assertProblems(references, [
+      'test-api-ref.yml: entries[0].output is not relative to the service',
+    ]);
+  });
+
+  test('api reference with entry output that does not exist fails', function() {
+    const references = new RefBuilder()
+      .apiref({entries: [{output: 'v2/resource.json#'}]})
+      .end();
+    assertProblems(references, [
+      'test-api-ref.yml: entries[0].output does not exist',
+    ]);
+  });
 });
 

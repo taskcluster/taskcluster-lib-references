@@ -8,7 +8,7 @@ exports.validate = (references) => {
   // first check for some basic structural issues that will cause Ajv to
   // be sad..
 
-  let schemaPattern; // capture group 1 == prefix up to and including service name)
+  let schemaPattern; // capture group 1 === prefix up to and including service name)
   if (references.rootUrl === 'https://taskcluster.net') {
     schemaPattern = new RegExp('(^https:\/\/schemas\.taskcluster\.net\/[^\/]*\/).*\.json#');
   } else {
@@ -118,6 +118,51 @@ exports.validate = (references) => {
           .errorsText(ajv.errors, {separator: '%%/%%', dataVar: 'reference'})
           .split('%%/%%')
           .forEach(err => problems.push(`${filename}: ${err}`));
+      }
+    }
+  }
+
+  // If we're still doing OK, let's check that the schema references from various
+  // reference entries are OK
+
+  if (!problems.length) {
+    // check that a schema link is relative to the service
+    for (let {filename, content} of references.references) {
+      const checkRelativeSchema = (name, serviceName, schema, i) => {
+        if (schema.match(/^\/|^[a-z]*:|^\.\./)) {
+          problems.push(`${filename}: entries[${i}].${name} is not relative to the service`);
+          return;
+        }
+        const fullSchema = libUrls.schema(references.rootUrl, serviceName, schema);
+        if (!references.getSchema(fullSchema, {skipValidation: true})) {
+          problems.push(`${filename}: entries[${i}].${name} does not exist`);
+        }
+      };
+
+      const metadata = references.getSchema(content.$schema, {skipValidation: true}).metadata;
+      if (metadata.name === 'api') {
+        if (metadata.version === 0) {
+          content.entries.forEach(({input, output}, i) => {
+            if (input) {
+              checkRelativeSchema('input', content.serviceName, input, i);
+            }
+            if (output) {
+              checkRelativeSchema('output', content.serviceName, output, i);
+            }
+          });
+        } else {
+          problems.push(`${filename}: unknown metadata.version ${metadata.version}`);
+        }
+      } else if (metadata.name === 'exchanges') {
+        if (metadata.version === 0) {
+          content.entries.forEach(({schema}, i) => {
+            checkRelativeSchema('schema', content.serviceName, schema, i);
+          });
+        } else {
+          problems.push(`${filename}: unknown metadata.version ${metadata.version}`);
+        }
+      } else {
+        problems.push(`${filename}: unknown metadata.name ${metadata.name}`);
       }
     }
   }
